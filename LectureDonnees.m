@@ -9,7 +9,7 @@ C3 = info.Label(13);
 C4 = info.Label(17);
 C6 = info.Label(18);
 
-startTrials = info.EVENT.POS(info.EVENT.TYP==768); %les positions (dans le signal) des débuts de tial
+startTrials = info.EVENT.POS(info.EVENT.TYP==768); %les positions (dans le signal) des débuts de trial
 leftHand = info.EVENT.POS(info.EVENT.TYP==1089); %les positions du mouvement main gauche
 rightHand = info.EVENT.POS(info.EVENT.TYP==1090); %les positions du mouvement de main droite
 bothHands = info.EVENT.POS(info.EVENT.TYP==1104); %les positions du mouvement des deux mains
@@ -49,9 +49,11 @@ signal_dixsept = file.signal(:,17);
 signal_treize = file.signal(:,13);
 signal_douze = file.signal(:,12);
 
+
+
 fs = 256;
 order = 5;
-range = [8,30]; % filtrage entre 8 et 30 Hz
+range = [8,25]; % filtrage entre 8 et 30 Hz
 [B,A] = butter(order,[range(1,1)*(2/fs),range(1,2)*(2/fs)]);
 
 filteredSignal18 = filter(B,A,signal_dixhuit);
@@ -71,13 +73,17 @@ filteredSignal18 = filteredSignal18(250:end);
 filteredSignal17 = filteredSignal17(250:end);
 filteredSignal13 = filteredSignal13(250:end);
 filteredSignal12 = filteredSignal12(250:end);
+
+
 %scatter(filteredSignal8, filteredSignal12);
 
-%plot(filteredSignal8);
+
 %figure;
 %plot(filteredSignal12);
 
 % Main droite
+
+
 for f = 1:length(allRightHandPosition)
 
     %endrightHand = info.EVENT.POS(info.EVENT.TYP==1090)+3072;
@@ -88,13 +94,16 @@ for f = 1:length(allRightHandPosition)
     filteredSignal_treize(f,:) = filteredSignal13(allRightHandPosition(f):fin);
     filteredSignal_douze(f,:) = filteredSignal12(allRightHandPosition(f):fin);
     
+ 
+    
    % covSameSide = cov(filteredSignal_dixhuit(f,:),filteredSignal_dixsept(f,:));
    % covOppositeSide = cov(filteredSignal_dixhuit(f,:),filteredSignal_onze(f,:));
     
    % B(f) = covSameSide(1,2);
    % C(f) = covOppositeSide(1,2);
 end
-
+   
+ 
 % Main gauche
 for g = 1:length(allLeftHandPosition)
     
@@ -151,22 +160,127 @@ end
 
 
 
-COV_SameSideRight = cov(filteredSignal_dixhuit(f,:),filteredSignal_dixsept(f,:))
-COV_OppositeSideRight = cov(filteredSignal_dixsept(f,:),filteredSignal_treize(f,:))
+%COV_SameSideRight = cov(filteredSignal_dixhuit(f,:),filteredSignal_dixsept(f,:))
+%COV_OppositeSideRight = cov(filteredSignal_dixsept(f,:),filteredSignal_treize(f,:))
 
 
 % On trace les points
+%BL13 = mean(filteredSignal_treize(1,1:512))^2;
+%BL17 = mean(filteredSignal_dixsept(1,1:512))^2;
 
+
+% Calculs de moyennes des trials
+for i = 1 : 3072
+ 
+   meanAllPatientsRH13(i) = mean(filteredSignal_treize(1:20,i)); 
+   meanAllPatientsLH13(i) = mean(filteredSignal_treize(20:40,i)); 
+   meanAllPatientsBH13(i) = mean(filteredSignal_treize(40:60,i)); 
+   meanAllPatientsR13(i) = mean(filteredSignal_treize(60:80,i)); 
+   
+   meanAllPatients13(i) = mean(filteredSignal_treize(:,i)); 
+   
+   meanAllPatientsRH17(i) = mean(filteredSignal_dixsept(1:20,i)); 
+   meanAllPatientsLH17(i) = mean(filteredSignal_dixsept(20:40,i)); 
+   meanAllPatientsBH17(i) = mean(filteredSignal_dixsept(40:60,i)); 
+   meanAllPatientsR17(i) = mean(filteredSignal_dixsept(60:80,i)); 
+   
+   meanAllPatients17(i) = mean(filteredSignal_dixsept(:,i)); 
+   
+end
+
+
+% BaseLine
+BL13 =  mean(meanAllPatients13(1:512))^2;
+BL17 =  mean(meanAllPatients17(1:512))^2;
+
+%Formule pour calculer ERD/ERS
+for i = 1 : 2560
+    
+    %((mean(filteredSignal_treize(1,i).^2)-BL13)/BL13)*100
+    
+   ERDERS_13RH(i) = ((mean(meanAllPatientsRH13(1+i:512+i).^2)-BL13)/BL13);
+   ERDERS_17RH(i) = ((mean(meanAllPatientsRH17(1+i:512+i).^2)-BL17)/BL17);
+   
+   ERDERS_13LH(i) = ((mean(meanAllPatientsLH13(1+i:512+i).^2)-BL13)/BL13);
+   ERDERS_17LH(i) = ((mean(meanAllPatientsLH17(1+i:512+i).^2)-BL17)/BL17);
+   
+   ERDERS_13BH(i) = ((mean(meanAllPatientsBH13(1+i:512+i).^2)-BL13)/BL13);
+   ERDERS_17BH(i) = ((mean(meanAllPatientsBH17(1+i:512+i).^2)-BL17)/BL17);
+   
+   ERDERS_13R(i) = ((mean(meanAllPatientsR13(1+i:512+i).^2)-BL13)/BL13);
+   ERDERS_17R(i) = ((mean(meanAllPatientsR17(1+i:512+i).^2)-BL17)/BL17);
+   
+end
+
+
+ %Dessin des ERD/ERS en fonction du temps
+ plot(ERDERS_13LH)
+ hold on
+ plot(ERDERS_13RH)
+ title('ERD/ERS en fonction du temps (C3)')
+ xlabel('temps')
+ ylabel('ERD/ERS')
+ 
+ %Decoupe du signal pour ne conserver que les deux premières secondes
+ ERDERS_13RH = ERDERS_13RH(1:512)
+ ERDERS_17RH = ERDERS_17RH(1:512)
+ 
+ ERDERS_13LH = ERDERS_13LH(1:512)
+ ERDERS_17LH = ERDERS_17LH(1:512)
+ 
+ ERDERS_13BH = ERDERS_13BH(1:512)
+ ERDERS_17BH = ERDERS_17BH(1:512)
+ 
+ ERDERS_13R = ERDERS_13R(1:512)
+ ERDERS_17R = ERDERS_17R(1:512)
+ 
+ cov13 = cov(ERDERS_13RH,ERDERS_13LH)
+ cov17 = cov(ERDERS_17RH,ERDERS_17LH)
+ 
+ 
+ 
+ %Dessin du nuage de points des 4 classes entre les electrodes C3 et C4
+ figure;
+ scatter(ERDERS_13RH, ERDERS_17RH, 'b')
+ hold on
+ scatter(ERDERS_13LH, ERDERS_17LH, 'r')
+ hold on
+ scatter(ERDERS_13BH, ERDERS_17BH, 'g')
+ hold on
+ scatter(ERDERS_13R, ERDERS_17R, 'y')
+ 
+title('4 Classes:  b= main droite, r= main gauche, g= deux mains, y= repos')
+xlabel('C3')
+ylabel('C4')
+
+ 
+ cov1 = cov(filteredSignal_dixsept(15,:),filteredSignal_treize(15,:));
+ cov2 = cov(filteredSignal_dixsept(75,:),filteredSignal_treize(75,:));
+ 
+ %figure;
+ %plot(filteredSignal_dixsept(35,:))
+% hold on
+ %plot(filteredSignal_dixsept(36,:))
+  
+ %figure;
+% scatter(filteredSignal_dixsept(15,:), filteredSignal_treize(15,:))
+ %hold on
+ %scatter(filteredSignal_dixsept(35,:), filteredSignal_treize(15,:))
+ 
+ 
+ 
+%{ 
+  
 fDroite = figure;
 movegui(fDroite,'southwest');
 % pour le premier parametre du signal : 1->20 = droite, 20->40 = gauche,
 % 40->60 = both, 60->80=rest
 % exemple si je mets 15 j'aurai le 15eme trial main droite, si je mets 35
 % j'aurai le 15eme mouvement main gauche
-s1= scatter(filteredSignal_dixhuit(15,:),filteredSignal_dixsept(15,:),15,'w','filled');
+s1= scatter(filteredSignal_treize(15,:),filteredSignal_dixsept(15,:),15,'w','filled');
 s1.MarkerEdgeColor  = 'b';
 hold on
-s2 = scatter(filteredSignal_dixsept(15,:),filteredSignal_treize(15,:),15,'r','filled');
+s2 = scatter(filteredSignal_treize(35,:),filteredSignal_dixsept(35,:),15,'r','filled');
 s2.MarkerEdgeColor  = 'b';
 title('Main Droite')
 xlabel('En blanc entre C6 et C4, en couleur en C4 et C3')
@@ -193,16 +307,16 @@ hold on
 s6 = scatter(filteredSignal_dixsept(55,:),filteredSignal_treize(55,:),15,'y','filled');
 s6.MarkerEdgeColor  = 'b';
 title('Deux mains')
-xlabel('En blanc entre C6 et C4, en couleur en C4 et C3')
+xlabel('En blanc entre C6 et C4, en couleur en C1 et C3')
 
 fRest = figure;
 movegui(fRest,'northeast');
 
-s7 = scatter(filteredSignal_dixhuit(75,:),filteredSignal_dixsept(75,:),15,'w','filled');
+s7 = scatter(filteredSignal_treize(75,:),filteredSignal_dixsept(75,:),15,'w','filled');
 s7.MarkerEdgeColor  = 'b';
 
 hold on
-s8 = scatter(filteredSignal_dixsept(75,:),filteredSignal_treize(75,:),15,'k','filled');
+s8 = scatter(filteredSignal_treize(75,:),filteredSignal_dixsept(75,:),15,'k','filled');
 s8.MarkerEdgeColor  = 'b';
 title('Repos')
 xlabel('En blanc entre C6 et C4, en couleur en C4 et C3')
@@ -221,6 +335,9 @@ xlabel('En blanc entre C6 et C4, en couleur en C4 et C3')
 
 %somme des points du signal
 %sommeDesPoints = sum(filteredSignal)
+ 
+ 
+ %}
 end
 
 
