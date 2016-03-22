@@ -53,13 +53,14 @@ signal_douze = file.signal(:,12);
 
 fs = 256;
 order = 5;
-range = [8,25]; % filtrage entre 8 et 30 Hz
+range = [7,25]; % filtrage entre 8 et 30 Hz
 [B,A] = butter(order,[range(1,1)*(2/fs),range(1,2)*(2/fs)]);
 
 filteredSignal18 = filter(B,A,signal_dixhuit);
 filteredSignal17 = filter(B,A,signal_dixsept);
 filteredSignal13 = filter(B,A,signal_treize);
 filteredSignal12 = filter(B,A,signal_douze);
+
 
 
 % 1104 deux mains 1108 repos 1089 main gauche 1090 main droite
@@ -75,12 +76,16 @@ filteredSignal13 = filteredSignal13(250:end);
 filteredSignal12 = filteredSignal12(250:end);
 
 
+BL13 = filteredSignal13(1:512);
+BL17 = filteredSignal17(1:512);
+
+
 %scatter(filteredSignal8, filteredSignal12);
 
 
 %figure;
-%plot(filteredSignal12);
-
+%plot(filteredSignal13(1:3072));
+%figure
 % Main droite
 
 
@@ -167,6 +172,89 @@ end
 % On trace les points
 %BL13 = mean(filteredSignal_treize(1,1:512))^2;
 %BL17 = mean(filteredSignal_dixsept(1,1:512))^2;
+plot(filteredSignal_treize(1,:))
+title('signal filtré RH (1er trial)')
+figure
+
+% mise au carré du signal
+for i=1:3072
+    for j=1:80
+     filteredSignal_treize(j,i)=filteredSignal_treize(j,i)^2;
+     filteredSignal_dixsept(j,i)=filteredSignal_dixsept(j,i)^2;
+    end
+end
+
+plot(filteredSignal_treize(1,:))
+title('signal au carré RH (1er trial)')
+ xlabel('temps')
+figure
+% moyenne de tous les trials
+for i=1:3072
+     tmpRH13(i) = mean(filteredSignal_treize(1:20,i));
+     tmpLH13(i) = mean(filteredSignal_treize(20:40,i));
+     tmpRH17(i) = mean(filteredSignal_dixsept(1:20,i));
+     tmpLH17(i) = mean(filteredSignal_dixsept(20:40,i));
+
+end
+
+plot(tmpRH13)
+title('moyenne des trials RH')
+figure
+
+
+%bl = filteredSignal18(1:512);
+
+
+
+for i=1:512
+     
+     BL13(i) = BL13(i).^2;
+     BL17(i) = BL17(i).^2;
+end
+
+tmpRH13 = tmpRH13';
+tmpLH13 = tmpLH13';
+tmpRH17 = tmpRH17';
+tmpLH17 = tmpLH17';
+
+%BL = mean(BL)
+BL13 = BL13';
+BL17 = BL17';
+for i=0:2560
+ %erd_ers(i:i+512) = (test(i:i+512)-bl(1:512))/bl(1:512);
+ %erd_ers(i) = (test(1+i:512+i)-bl)/bl;
+ 
+     erd_ersRH13(i+1) = ((mean(tmpRH13(i+1:i+512))-BL13)/BL13)*100;
+     erd_ersLH13(i+1) = ((mean(tmpLH13(i+1:i+512))-BL13)/BL13)*100;
+     
+     erd_ersRH17(i+1) = ((mean(tmpRH17(i+1:i+512))-BL17)/BL17)*100;
+     erd_ersLH17(i+1) = ((mean(tmpLH17(i+1:i+512))-BL17)/BL17)*100;
+ %erd_ers(i+1) = mean(tmp);
+end
+
+
+
+
+for i=1:2561
+   erd_ersLH13(i) = -erd_ersLH13(i);  
+   erd_ersRH13(i) = erd_ersRH13(i)+60;
+end
+
+plot(erd_ersLH13)
+hold on
+plot(erd_ersRH13)
+title('ERS/ERS')
+xlabel('temps (1sec = 256)')
+ylabel('ERD/ERS%')
+figure
+
+
+%scatter(erd_ersLH13(1:512),erd_ersLH17(1:512))
+%hold on
+%scatter(erd_ersRH13(1:512),erd_ersRH17(1:512))
+%figure
+
+
 
 
 % Calculs de moyennes des trials
@@ -198,17 +286,17 @@ for i = 1 : 2560
     
     %((mean(filteredSignal_treize(1,i).^2)-BL13)/BL13)*100
     
-   ERDERS_13RH(i) = ((mean(meanAllPatientsRH13(1+i:512+i).^2)-BL13)/BL13);
-   ERDERS_17RH(i) = ((mean(meanAllPatientsRH17(1+i:512+i).^2)-BL17)/BL17);
+   ERDERS_13RH(i) = ((mean(meanAllPatientsRH13(i:511+i).^2)-BL13)/BL13);
+   ERDERS_17RH(i) = ((mean(meanAllPatientsRH17(i:511+i).^2)-BL17)/BL17);
    
-   ERDERS_13LH(i) = ((mean(meanAllPatientsLH13(1+i:512+i).^2)-BL13)/BL13);
-   ERDERS_17LH(i) = ((mean(meanAllPatientsLH17(1+i:512+i).^2)-BL17)/BL17);
+   ERDERS_13LH(i) = ((mean(meanAllPatientsLH13(i:511+i).^2)-BL13)/BL13);
+   ERDERS_17LH(i) = ((mean(meanAllPatientsLH17(i:511+i).^2)-BL17)/BL17);
    
-   ERDERS_13BH(i) = ((mean(meanAllPatientsBH13(1+i:512+i).^2)-BL13)/BL13);
-   ERDERS_17BH(i) = ((mean(meanAllPatientsBH17(1+i:512+i).^2)-BL17)/BL17);
+   ERDERS_13BH(i) = ((mean(meanAllPatientsBH13(i:511+i).^2)-BL13)/BL13);
+   ERDERS_17BH(i) = ((mean(meanAllPatientsBH17(i:511+i).^2)-BL17)/BL17);
    
-   ERDERS_13R(i) = ((mean(meanAllPatientsR13(1+i:512+i).^2)-BL13)/BL13);
-   ERDERS_17R(i) = ((mean(meanAllPatientsR17(1+i:512+i).^2)-BL17)/BL17);
+   ERDERS_13R(i) = ((mean(meanAllPatientsR13(i:511+i).^2)-BL13)/BL13);
+   ERDERS_17R(i) = ((mean(meanAllPatientsR17(i:511+i).^2)-BL17)/BL17);
    
 end
 
@@ -222,20 +310,20 @@ end
  ylabel('ERD/ERS')
  
  %Decoupe du signal pour ne conserver que les deux premières secondes
- ERDERS_13RH = ERDERS_13RH(1:512)
- ERDERS_17RH = ERDERS_17RH(1:512)
+ ERDERS_13RH = ERDERS_13RH(1:512);
+ ERDERS_17RH = ERDERS_17RH(1:512);
  
- ERDERS_13LH = ERDERS_13LH(1:512)
- ERDERS_17LH = ERDERS_17LH(1:512)
+ ERDERS_13LH = ERDERS_13LH(1:512);
+ ERDERS_17LH = ERDERS_17LH(1:512);
  
- ERDERS_13BH = ERDERS_13BH(1:512)
- ERDERS_17BH = ERDERS_17BH(1:512)
+ ERDERS_13BH = ERDERS_13BH(1:512);
+ ERDERS_17BH = ERDERS_17BH(1:512);
  
- ERDERS_13R = ERDERS_13R(1:512)
- ERDERS_17R = ERDERS_17R(1:512)
+ ERDERS_13R = ERDERS_13R(1:512);
+ ERDERS_17R = ERDERS_17R(1:512);
  
- cov13 = cov(ERDERS_13RH,ERDERS_13LH)
- cov17 = cov(ERDERS_17RH,ERDERS_17LH)
+ cov13 = cov(ERDERS_13RH,ERDERS_13LH);
+ cov17 = cov(ERDERS_17RH,ERDERS_17LH);
  
  
  
