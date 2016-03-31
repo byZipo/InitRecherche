@@ -325,7 +325,7 @@ set(gca,'XTick',[0 8 16 24 32 40 48 56 64 72 80 88 96] );
 set(gca,'XTickLabel',[-2 0 1 2 3 4 5 6 7 8 9 10 12] ); 
 xlabel('temps en secondes')
 ylabel('ERD/ERS%')
-figure
+
 
 
 %scatter(erd_ersLH13(1:512),erd_ersLH17(1:512))
@@ -346,7 +346,7 @@ xlabel('C3')
 ylabel('C4')
 
 
-
+%{
 
 % Calculs de moyennes des trials
 for i = 1 : 3072
@@ -417,10 +417,11 @@ end
  cov13 = cov(ERDERS_13RH,ERDERS_13LH);
  cov17 = cov(ERDERS_17RH,ERDERS_17LH);
  
- 
+ %}
  
  %Dessin du nuage de points des 4 classes entre les electrodes C3 et C4
- figure;
+ %{
+figure;
  scatter(ERDERS_13RH, ERDERS_17RH, 'b')
  hold on
  scatter(ERDERS_13LH, ERDERS_17LH, 'r')
@@ -447,7 +448,7 @@ ylabel('C4')
  %hold on
  %scatter(filteredSignal_dixsept(35,:), filteredSignal_treize(15,:))
  
- 
+%} 
  
 %{ 
   
